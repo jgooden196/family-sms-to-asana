@@ -26,25 +26,19 @@ app.post("/twilio/sms", (req, res) => {
   const body = req.body.Body;
   const messageSid = req.body.MessageSid;
 
-  logEvent("incoming_sms", {
-    from,
-    to,
-    body,
-    messageSid
-  });
+  logEvent("incoming_sms", { from, to, body, messageSid });
 
   const replyText =
     "Got it — this has been added to JP’s Asana and will be handled.";
 
-  res
-    .status(200)
-    .type("text/xml")
-    .send(
-      `<Response>
-         <Message>${replyText}</Message>
-       </Response>`
-    );
+  // Twilio expects TwiML (XML). This response tells Twilio to send an SMS reply.
+  res.set("Content-Type", "text/xml");
+  res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Message>${replyText}</Message>
+</Response>`);
 });
+
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
