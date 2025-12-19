@@ -6,6 +6,10 @@ const app = express();
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
+app.get("/", (req, res) => {
+  res.status(200).send("ok");
+});
+
 function logEvent(event, data) {
   const payload = {
     ts: new Date().toISOString(),
