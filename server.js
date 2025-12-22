@@ -2,6 +2,9 @@ const express = require("express");
 const axios = require("axios");
 
 const app = express();
+const ASANA_TOKEN = process.env.ASANA_TOKEN;
+const ASANA_PROJECT_ID = process.env.ASANA_PROJECT_ID || "1205042456117269";
+
 
 // Twilio will POST with form-encoded data by default
 app.use(express.urlencoded({ extended: false }));
@@ -19,6 +22,41 @@ function logEvent(event, data) {
   };
   console.log(JSON.stringify(payload));
 }
+
+async function createAsanaTask({ taskName, notes }) {
+  if (!ASANA_TOKEN) {
+    throw new Error("Missing ASANA_TOKEN environment variable in Railway.");
+  }
+
+  const url = "https://app.asana.com/api/1.0/tasks";
+  const headers = {
+    Authorization: `Bearer ${ASANA_TOKEN}`,
+    "Content-Type": "application/json"
+  };
+
+  const payload = {
+    data: {
+      name: taskName,
+      notes: notes || "",
+      projects: [ASANA_PROJECT_ID]
+    }
+  };
+
+  logEvent("asana_create_task_request", {
+    projectId: ASANA_PROJECT_ID,
+    taskName
+  });
+
+  const response = await axios.post(url, payload, { headers });
+
+  logEvent("asana_create_task_success", {
+    taskGid: response.data?.data?.gid,
+    taskUrl: response.data?.data?.permalink_url
+  });
+
+  return response.data?.data;
+}
+
 
 app.get("/health", (req, res) => {
   logEvent("health_check", { ip: req.ip });
@@ -62,6 +100,21 @@ app.post("/twilio/sms", (req, res) => {
   }
 
   logEvent("incoming_sms", { from, to, body, messageSid });
+
+    try {
+    const taskName = body && body.trim().length ? body.trim() : "(empty message)";
+    const notes = `Captured via SMS\nFrom: ${from}\nTo: ${to}\nMessageSid: ${messageSid}\nCapturedAt: ${new Date().toISOString()}`;
+
+    await createAsanaTask({ taskName, notes });
+  } catch (err) {
+    logEvent("asana_create_task_error", {
+      message: err?.message,
+      status: err?.response?.status,
+      data: err?.response?.data
+    });
+    // We still reply to the user even if Asana fails
+  }
+
 
   const replyText =
     "Got it — this has been added to JP’s Asana and will be handled.";
