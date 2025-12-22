@@ -10,6 +10,13 @@ const ASANA_PROJECT_ID = process.env.ASANA_PROJECT_ID || "1205042456117269";
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
+logEvent("env_check", {
+  hasAsanaToken: !!process.env.ASANA_TOKEN,
+  hasAsanaProjectId: !!process.env.ASANA_PROJECT_ID,
+  resolvedProjectId: ASANA_PROJECT_ID
+});
+
+
 app.get("/", (req, res) => {
   res.status(200).send("ok");
 });
