@@ -63,7 +63,7 @@ app.get("/health", (req, res) => {
   res.status(200).send("ok");
 });
 
-app.post("/twilio/sms", (req, res) => {
+app.post("/twilio/sms", async (req, res) => {
   const from = req.body.From;
   const to = req.body.To;
   const body = req.body.Body;
