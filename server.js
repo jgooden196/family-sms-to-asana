@@ -10,6 +10,14 @@ const ASANA_PROJECT_ID = process.env.ASANA_PROJECT_ID || "1205042456117269";
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
+const app = express();
+const ASANA_TOKEN = process.env.ASANA_TOKEN;
+const ASANA_PROJECT_ID = process.env.ASANA_PROJECT_ID || "1205042456117269";
+
+// Twilio will POST with form-encoded data by default
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
+
 app.get("/", (req, res) => {
   res.status(200).send("ok");
 });
