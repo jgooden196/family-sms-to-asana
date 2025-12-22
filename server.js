@@ -73,6 +73,16 @@ app.post("/twilio/sms", (req, res) => {
 </Response>`);
 });
 
+app.get("/test/twilio", (req, res) => {
+  const replyText = "Got it — this has been added to JP’s Asana and will be handled.";
+
+  res.set("Content-Type", "text/xml");
+  return res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Message>${replyText}</Message>
+</Response>`);
+});
+
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
