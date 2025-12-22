@@ -30,6 +30,36 @@ app.post("/twilio/sms", (req, res) => {
   const body = req.body.Body;
   const messageSid = req.body.MessageSid;
 
+  // Basic compliance keywords
+  const incoming = (body || "").trim().toUpperCase();
+
+  if (incoming === "STOP") {
+    logEvent("opt_out_stop", { from, to, messageSid });
+    res.set("Content-Type", "text/xml");
+    return res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Message>You’re opted out. Reply START to re-subscribe.</Message>
+</Response>`);
+  }
+
+  if (incoming === "START") {
+    logEvent("opt_in_start", { from, to, messageSid });
+    res.set("Content-Type", "text/xml");
+    return res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Message>You’re back in. Reply STOP to opt out.</Message>
+</Response>`);
+  }
+
+  if (incoming === "HELP") {
+    logEvent("help_request", { from, to, messageSid });
+    res.set("Content-Type", "text/xml");
+    return res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Message>Help: This number captures family to-dos into JP’s Asana. Reply STOP to opt out.</Message>
+</Response>`);
+  }
+
   logEvent("incoming_sms", { from, to, body, messageSid });
 
   const replyText =
@@ -37,7 +67,7 @@ app.post("/twilio/sms", (req, res) => {
 
   // Twilio expects TwiML (XML). This response tells Twilio to send an SMS reply.
   res.set("Content-Type", "text/xml");
-  res.send(`<?xml version="1.0" encoding="UTF-8"?>
+ return res.send(`<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Message>${replyText}</Message>
 </Response>`);
